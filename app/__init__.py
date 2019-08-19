@@ -1,5 +1,5 @@
 from flask import Flask
-from config import Config
+from flask import request
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
@@ -8,15 +8,21 @@ from logging.handlers import SMTPHandler
 from logging.handlers import RotatingFileHandler
 import os
 from flask_mail import Mail
+from flask_bootstrap import Bootstrap
+from flask_moment import Moment
+from flask_babel import Babel
+from config import Config
+
 
 app = Flask(__name__)
 app.config.from_object(Config)
+babel = Babel(app)
+bootstrap = Bootstrap(app)
 db = SQLAlchemy(app)
-migrate = Migrate(app, db)
 login = LoginManager(app)
 mail = Mail(app)
-
-from app import routes, models,errors
+migrate = Migrate(app, db)
+moment = Moment(app)
 
 
 login.login_view = 'login'
@@ -37,12 +43,21 @@ if not app.debug:
         app.logger.addHandler(mail_handler)
     if not os.path.exists('logs'):
         os.mkdir('logs')
-    file_handler = RotatingFileHandler('logs/microblog.log', maxBytes=10240,
-                                       backupCount=10)
+    file_handler = RotatingFileHandler('logs/microblog.log', maxBytes=10240, backupCount=10)
     file_handler.setFormatter(logging.Formatter(
         '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'))
     file_handler.setLevel(logging.INFO)
     app.logger.addHandler(file_handler)
-
+    
     app.logger.setLevel(logging.INFO)
     app.logger.info('Microblog startup')
+ 
+ 
+@babel.localeselector
+def get_locale():
+    return request.accept_languages.best_match(app.config['LANGUAGES'])
+    # Test if you want to see the site in Spanish
+    # return 'es'
+
+
+from app import routes, models, errors
