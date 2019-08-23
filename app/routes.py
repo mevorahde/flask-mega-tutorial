@@ -8,6 +8,7 @@ from app.forms import LoginForm, RegistrationForm, EditProfileForm, PostForm, \
     ResetPasswordRequestForm, ResetPasswordForm
 from app.models import User, Post
 from app.email import send_password_reset_email
+<<<<<<< HEAD
 
 
 @app.before_request
@@ -16,6 +17,21 @@ def before_request():
         current_user.last_seen = datetime.utcnow()
         db.session.commit()
     g.locale = str(get_locale())
+||||||| merged common ancestors
+from app.forms import ResetPasswordForm
+=======
+from guess_language import guess_language
+from flask import jsonify
+from app.translate import translate
+
+
+@app.before_request
+def before_request():
+    if current_user.is_authenticated:
+        current_user.last_seen = datetime.utcnow()
+        db.session.commit()
+    g.locale = str(get_locale())
+>>>>>>> ch14
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -24,7 +40,11 @@ def before_request():
 def index():
     form = PostForm()
     if form.validate_on_submit():
-        post = Post(body=form.post.data, author=current_user)
+        language = guess_language(form.post.data)
+        if language == 'UNKNOWN' or len(language) > 5:
+            language = ''
+        post = Post(body=form.post.data, author=current_user,
+                    language=language)
         db.session.add(post)
         db.session.commit()
         flash(_('Your post is now live!'))
@@ -90,6 +110,7 @@ def register():
         user.set_password(form.password.data)
         db.session.add(user)
         db.session.commit()
+<<<<<<< HEAD
         flash(_('Congratulations, you are now a registered user!'))
         return redirect(url_for('login'))
     return render_template('register.html', title=_('Register'), form=form)
@@ -123,8 +144,51 @@ def reset_password(token):
         user.set_password(form.password.data)
         db.session.commit()
         flash(_('Your password has been reset.'))
+||||||| merged common ancestors
+        flash('Congratulations, you are now a registered user!')
+=======
+        flash(_('Congratulations, you are now a registered user!'))
+>>>>>>> ch14
+        return redirect(url_for('login'))
+<<<<<<< HEAD
+    return render_template('reset_password.html', form=form)
+||||||| merged common ancestors
+    return render_template('register.html', title='Register', form=form)
+=======
+    return render_template('register.html', title=_('Register'), form=form)
+
+
+@app.route('/reset_password_request', methods=['GET', 'POST'])
+def reset_password_request():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    form = ResetPasswordRequestForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data).first()
+        if user:
+            send_password_reset_email(user)
+        flash(
+            _('Check your email for the instructions to reset your password'))
+        return redirect(url_for('login'))
+    return render_template('reset_password_request.html',
+                           title=_('Reset Password'), form=form)
+
+
+@app.route('/reset_password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    user = User.verify_reset_password_token(token)
+    if not user:
+        return redirect(url_for('index'))
+    form = ResetPasswordForm()
+    if form.validate_on_submit():
+        user.set_password(form.password.data)
+        db.session.commit()
+        flash(_('Your password has been reset.'))
         return redirect(url_for('login'))
     return render_template('reset_password.html', form=form)
+>>>>>>> ch14
 
 
 @app.route('/user/<username>')
@@ -187,5 +251,53 @@ def unfollow(username):
         return redirect(url_for('user', username=username))
     current_user.unfollow(user)
     db.session.commit()
+<<<<<<< HEAD
     flash(_('You are not following %(username)s.', username=username))
     return redirect(url_for('user', username=username))
+||||||| merged common ancestors
+    flash('You are not following {}.'.format(username))
+    return redirect(url_for('user', username=username))
+
+
+@app.route('/reset_password_request', methods=['GET', 'POST'])
+def reset_password_request():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    form = ResetPasswordRequestForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data).first()
+        if user:
+            send_password_reset_email(user)
+        flash('Check your email for the instructions to reset your password')
+        return redirect(url_for('login'))
+    return render_template('reset_password_request.html', title='Reset Password', form=form)
+
+
+@app.route('/reset_password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    user = User.verify_reset_password_token(token)
+    if not user:
+        return redirect(url_for('index'))
+    form = ResetPasswordForm()
+    if form.validate_on_submit():
+        user.set_password(form.password.data)
+        db.session.commit()
+        flash('Your password has been reset.')
+        return redirect(url_for('login'))
+    return render_template('reset_password.html', form=form)
+
+
+=======
+    flash(_('You are not following %(username)s.', username=username))
+    return redirect(url_for('user', username=username))
+
+
+@app.route('/translate', methods=['POST'])
+@login_required
+def translate_text():
+    return jsonify({'text': translate(request.form['text'],
+                                      request.form['source_language'],
+                                      request.form['dest_language'])})
+>>>>>>> ch14

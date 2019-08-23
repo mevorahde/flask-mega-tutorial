@@ -43,6 +43,7 @@
             {% endfor %}
         {% endif %}
         {% endwith %}
+<<<<<<< HEAD
 
         {# application content needs to be provided in the app_content block #}
         {% block app_content %}{% endblock %}
@@ -54,3 +55,34 @@
     {{ moment.include_moment() }}
     {{ moment.lang(g.locale) }}
 {% endblock %}
+||||||| merged common ancestors
+        {% block content %}{% endblock %}
+    </body>
+</html>
+=======
+
+        {# application content needs to be provided in the app_content block #}
+        {% block app_content %}{% endblock %}
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+    {{ moment.include_moment() }}
+    {{ moment.lang(g.locale) }}
+    <script>
+        function translate(sourceElem, destElem, sourceLang, destLang) {
+            $(destElem).html('<img src="{{ url_for('static', filename='loading.gif') }}">');
+            $.post('/translate', {
+                text: $(sourceElem).text(),
+                source_language: sourceLang,
+                dest_language: destLang
+            }).done(function(response) {
+                $(destElem).text(response['text'])
+            }).fail(function() {
+                $(destElem).text("{{ _('Error: Could not contact server.') }}");
+            });
+        }
+    </script>
+{% endblock %}
+>>>>>>> ch14
