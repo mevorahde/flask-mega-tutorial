@@ -13,6 +13,7 @@ $py.class
 migrations/
 logs/
 venv/
+.db
 app.db
 
 # C extensions
